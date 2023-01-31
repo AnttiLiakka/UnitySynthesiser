@@ -10,9 +10,10 @@
 
 //==============================================================================
 UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
-     : AudioProcessor (BusesProperties()
+     :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
-                       )
+                       ),
+        m_osc([](float x) {return std::sin(x);})
 {
 }
 
@@ -85,7 +86,15 @@ void UnitySynthesiserAudioProcessor::changeProgramName (int index, const juce::S
 //==============================================================================
 void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-
+    m_spec.maximumBlockSize = samplesPerBlock;
+    m_spec.sampleRate = sampleRate;
+    m_spec.numChannels = getTotalNumOutputChannels();
+    
+    m_osc.prepare(m_spec);
+    m_gain.prepare(m_spec);
+    
+    m_osc.setFrequency(440);
+    m_gain.setGainLinear(0.01f);
 }
 
 void UnitySynthesiserAudioProcessor::releaseResources()
@@ -127,6 +136,12 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
+    juce::dsp::AudioBlock<float> audioBlock(buffer);
+    m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    m_gain.process (juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
 
 }
 
