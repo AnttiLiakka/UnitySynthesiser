@@ -58,14 +58,17 @@ public:
 
 private:
     
-    juce::dsp::Oscillator<float> m_osc;
     juce::dsp::ProcessSpec m_spec;
+    
+    juce::dsp::Oscillator<float> m_osc;
+    juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
     juce::AudioParameterFloat* m_freqSlider;
     juce::AudioParameterFloat* m_gainSlider;
     juce::AudioParameterChoice* m_waveformChoice;
     juce::AudioParameterBool* m_isPlaying;
+    juce::AudioParameterFloat* m_filterCutOff;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };

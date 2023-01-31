@@ -19,6 +19,11 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
     addParameter(m_waveformChoice = new juce::AudioParameterChoice("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0));
     addParameter(m_freqSlider = new juce::AudioParameterFloat("frequency", "Frequency", 0.0f, 20000.0f, 440.0f));
     addParameter(m_gainSlider = new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5));
+    addParameter(m_filterCutOff = new juce::AudioParameterFloat("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f));
+    
+    
+    m_filter.setEnabled(true);
+    m_filter.setMode(juce::dsp::LadderFilterMode::LPF12);
 }
 
 UnitySynthesiserAudioProcessor::~UnitySynthesiserAudioProcessor()
@@ -96,6 +101,7 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     
     m_osc.prepare(m_spec);
     m_gain.prepare(m_spec);
+    m_filter.prepare(m_spec);
     
     m_osc.setFrequency(m_freqSlider->get());
     m_gain.setGainLinear(m_gainSlider->get());
@@ -154,9 +160,15 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     }
     
     juce::dsp::AudioBlock<float> audioBlock(buffer);
+    
     m_osc.setFrequency(m_freqSlider->get());
+    m_filter.setCutoffFrequencyHz(m_filterCutOff->get());
     m_gain.setGainLinear(m_gainSlider->get());
+    
+    
+    
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
 }
@@ -192,3 +204,4 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new UnitySynthesiserAudioProcessor();
 }
+
