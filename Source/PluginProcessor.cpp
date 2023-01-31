@@ -13,8 +13,12 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
      :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
-        m_osc([](float x) {return std::sin(x);})
+        m_osc([](float x) {return std::sin(x);}, 510)
 {
+    addParameter(m_isPlaying = new juce::AudioParameterBool("playing", "Playing", 1));
+    addParameter(m_waveformChoice = new juce::AudioParameterChoice("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0));
+    addParameter(m_freqSlider = new juce::AudioParameterFloat("frequency", "Frequency", 0.0f, 20000.0f, 440.0f));
+    addParameter(m_gainSlider = new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5));
 }
 
 UnitySynthesiserAudioProcessor::~UnitySynthesiserAudioProcessor()
@@ -93,8 +97,8 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     m_osc.prepare(m_spec);
     m_gain.prepare(m_spec);
     
-    m_osc.setFrequency(440);
-    m_gain.setGainLinear(0.01f);
+    m_osc.setFrequency(m_freqSlider->get());
+    m_gain.setGainLinear(m_gainSlider->get());
 }
 
 void UnitySynthesiserAudioProcessor::releaseResources()
@@ -137,11 +141,23 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
+    if (!m_isPlaying->get()) return;
+    
+    //Sine
+    if (m_waveformChoice->getIndex() == 0)
+    {
+    m_osc.initialise([](float x) {return std::sin(x);}, 510);
+    } else
+    //Sawtooth
+    {
+    m_osc.initialise([](float x) {return x / juce::MathConstants<float>::pi;}, 510);
+    }
+    
     juce::dsp::AudioBlock<float> audioBlock(buffer);
+    m_osc.setFrequency(m_freqSlider->get());
+    m_gain.setGainLinear(m_gainSlider->get());
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    
-    m_gain.process (juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    
+    m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
 }
 
