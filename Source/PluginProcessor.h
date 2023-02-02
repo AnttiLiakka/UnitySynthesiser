@@ -68,6 +68,7 @@ private:
     juce::AudioParameterFloat* m_gainSlider;
     juce::AudioParameterChoice* m_waveformChoice;
     juce::AudioParameterBool* m_isPlaying;
+    juce::AudioParameterBool* m_filterBypass;
     juce::AudioParameterFloat* m_filterCutOff;
     
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)

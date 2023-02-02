@@ -17,8 +17,9 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
 {
     addParameter(m_isPlaying = new juce::AudioParameterBool("playing", "Playing", 1));
     addParameter(m_waveformChoice = new juce::AudioParameterChoice("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0));
-    addParameter(m_freqSlider = new juce::AudioParameterFloat("frequency", "Frequency", 0.0f, 20000.0f, 440.0f));
+    addParameter(m_freqSlider = new juce::AudioParameterFloat("frequency", "Frequency", 10.0f, 20000.0f, 440.0f));
     addParameter(m_gainSlider = new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5));
+    addParameter(m_filterBypass = new juce::AudioParameterBool("filterBypass", "Filter Bypass", 1));
     addParameter(m_filterCutOff = new juce::AudioParameterFloat("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f));
     
     
@@ -103,6 +104,9 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     m_gain.prepare(m_spec);
     m_filter.prepare(m_spec);
     
+    m_filter.setResonance(0);
+    m_filter.setDrive(1);
+    
     m_osc.setFrequency(m_freqSlider->get());
     m_gain.setGainLinear(m_gainSlider->get());
 }
@@ -166,9 +170,8 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     m_gain.setGainLinear(m_gainSlider->get());
     
     
-    
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    if(!m_filterBypass->get()) m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
 
 }
