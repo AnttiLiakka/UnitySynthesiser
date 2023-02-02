@@ -13,18 +13,28 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
      :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
+        m_valueTree(*this, nullptr, "Parameters",
+                    {std::make_unique<juce::AudioParameterBool>("playing", "Playing", 0),
+                     std::make_unique<juce::AudioParameterChoice>("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0),
+                     std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 10.0f, 20000.0f, 440.0f),
+                     std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
+                     std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", 1),
+                     std::make_unique<juce::AudioParameterFloat>("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f)
+        }),
         m_osc([](float x) {return std::sin(x);}, 510)
 {
-    addParameter(m_isPlaying = new juce::AudioParameterBool("playing", "Playing", 1));
-    addParameter(m_waveformChoice = new juce::AudioParameterChoice("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0));
-    addParameter(m_freqSlider = new juce::AudioParameterFloat("frequency", "Frequency", 10.0f, 20000.0f, 440.0f));
-    addParameter(m_gainSlider = new juce::AudioParameterFloat("gain", "Gain", 0.0f, 1.0f, 0.5));
-    addParameter(m_filterBypass = new juce::AudioParameterBool("filterBypass", "Filter Bypass", 1));
-    addParameter(m_filterCutOff = new juce::AudioParameterFloat("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f));
-    
+    m_valueTree.addParameterListener("playing", this);
+    m_valueTree.addParameterListener("waveform", this);
+    m_valueTree.addParameterListener("frequency", this);
+    m_valueTree.addParameterListener("gain", this);
+    m_valueTree.addParameterListener("filterBypass", this);
+    m_valueTree.addParameterListener("cutoff", this);
     
     m_filter.setEnabled(true);
     m_filter.setMode(juce::dsp::LadderFilterMode::LPF12);
+    m_filter.setCutoffFrequencyHz(20000.0f);
+    m_filter.setResonance(0);
+    m_filter.setDrive(1);
 }
 
 UnitySynthesiserAudioProcessor::~UnitySynthesiserAudioProcessor()
@@ -96,6 +106,7 @@ void UnitySynthesiserAudioProcessor::changeProgramName (int index, const juce::S
 //==============================================================================
 void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    
     m_spec.maximumBlockSize = samplesPerBlock;
     m_spec.sampleRate = sampleRate;
     m_spec.numChannels = getTotalNumOutputChannels();
@@ -104,11 +115,9 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     m_gain.prepare(m_spec);
     m_filter.prepare(m_spec);
     
-    m_filter.setResonance(0);
-    m_filter.setDrive(1);
-    
-    m_osc.setFrequency(m_freqSlider->get());
-    m_gain.setGainLinear(m_gainSlider->get());
+    m_osc.setFrequency(440.0f);
+    m_gain.setGainLinear(0.5f);
+     
 }
 
 void UnitySynthesiserAudioProcessor::releaseResources()
@@ -151,29 +160,14 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
     
-    if (!m_isPlaying->get()) return;
+    if (!m_playing) return;
     
-    //Sine
-    if (m_waveformChoice->getIndex() == 0)
-    {
-    m_osc.initialise([](float x) {return std::sin(x);}, 510);
-    } else
-    //Sawtooth
-    {
-    m_osc.initialise([](float x) {return x / juce::MathConstants<float>::pi;}, 510);
-    }
     
     juce::dsp::AudioBlock<float> audioBlock(buffer);
-    
-    m_osc.setFrequency(m_freqSlider->get());
-    m_filter.setCutoffFrequencyHz(m_filterCutOff->get());
-    m_gain.setGainLinear(m_gainSlider->get());
-    
-    
+        
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    if(!m_filterBypass->get()) m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-
 }
 
 //==============================================================================
@@ -206,5 +200,61 @@ void UnitySynthesiserAudioProcessor::setStateInformation (const void* data, int 
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
     return new UnitySynthesiserAudioProcessor();
+}
+
+void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    if (parameterID == "playing")
+    {
+        if(newValue == 1)
+        {
+            m_playing = true;
+        }
+        else
+        {
+            m_playing = false;
+        }
+    }
+    else if (parameterID == "waveform")
+    {
+        if (newValue == 0)
+        {
+            m_osc.initialise([](float x) {return std::sin(x);}, 510);
+        }
+        else if (newValue == 1)
+        {
+            m_osc.initialise([](float x) {return x / juce::MathConstants<float>::pi;}, 510);
+        }
+    }
+    else if (parameterID == "frequency")
+    {
+        m_osc.setFrequency(newValue);
+    }
+    else if (parameterID == "gain")
+    {
+        if (newValue > 1.0f)
+        {
+            m_gain.setGainLinear(1.0f);
+        }
+        else
+        {
+            m_gain.setGainLinear(newValue);
+        }
+    }
+    else if (parameterID == "filterBypass")
+    {
+        if (newValue == 1)
+        {
+            m_filter.setEnabled(false);
+        }
+        else
+        {
+            m_filter.setEnabled(true);
+        }
+    }
+    else if (parameterID == "cutoff")
+    {
+        m_filter.setCutoffFrequencyHz(newValue);
+    }
 }
 

@@ -13,7 +13,8 @@
 //==============================================================================
 /**
 */
-class UnitySynthesiserAudioProcessor  : public juce::AudioProcessor
+class UnitySynthesiserAudioProcessor  : public juce::AudioProcessor,
+                            public juce::AudioProcessorValueTreeState::Listener
                             #if JucePlugin_Enable_ARA
                              , public juce::AudioProcessorARAExtension
                             #endif
@@ -55,8 +56,12 @@ public:
     //==============================================================================
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
+    
+    juce::AudioProcessorValueTreeState m_valueTree;
     
     juce::dsp::ProcessSpec m_spec;
     
@@ -64,12 +69,7 @@ private:
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
-    juce::AudioParameterFloat* m_freqSlider;
-    juce::AudioParameterFloat* m_gainSlider;
-    juce::AudioParameterChoice* m_waveformChoice;
-    juce::AudioParameterBool* m_isPlaying;
-    juce::AudioParameterBool* m_filterBypass;
-    juce::AudioParameterFloat* m_filterCutOff;
-    
+    bool m_playing = false;
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };
