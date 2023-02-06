@@ -13,28 +13,38 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
      :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
+        m_osc([](float x) {return std::sin(x);}, 510),
         m_valueTree(*this, nullptr, "Parameters",
                     {std::make_unique<juce::AudioParameterBool>("playing", "Playing", 0),
+                     std::make_unique<juce::AudioParameterFloat>("attack", "Attack", 0.1f, 10.0f, m_envelopeAttack),
+                     std::make_unique<juce::AudioParameterFloat>("decay", "Decay", 0.1, 10.0f, m_envelopeDecay),
+                     std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.1f, 1.0f, m_envelopeSustain),
+                     std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.1f, 10.0f, m_envelopeRelease),
                      std::make_unique<juce::AudioParameterChoice>("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0),
                      std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 10.0f, 20000.0f, 440.0f),
                      std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
                      std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", 1),
                      std::make_unique<juce::AudioParameterFloat>("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f)
-        }),
-        m_osc([](float x) {return std::sin(x);}, 510)
+        })
 {
     m_valueTree.addParameterListener("playing", this);
+    m_valueTree.addParameterListener("attack", this);
+    m_valueTree.addParameterListener("decay", this);
+    m_valueTree.addParameterListener("sustain", this);
+    m_valueTree.addParameterListener("release", this);
     m_valueTree.addParameterListener("waveform", this);
     m_valueTree.addParameterListener("frequency", this);
     m_valueTree.addParameterListener("gain", this);
     m_valueTree.addParameterListener("filterBypass", this);
     m_valueTree.addParameterListener("cutoff", this);
     
-    m_filter.setEnabled(true);
+    m_filter.setEnabled(false);
     m_filter.setMode(juce::dsp::LadderFilterMode::LPF12);
     m_filter.setCutoffFrequencyHz(20000.0f);
     m_filter.setResonance(0);
     m_filter.setDrive(1);
+    
+    setEnvelopeParameters();
 }
 
 UnitySynthesiserAudioProcessor::~UnitySynthesiserAudioProcessor()
@@ -114,6 +124,7 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     m_osc.prepare(m_spec);
     m_gain.prepare(m_spec);
     m_filter.prepare(m_spec);
+    m_adsr.setSampleRate(sampleRate);
     
     m_osc.setFrequency(440.0f);
     m_gain.setGainLinear(0.5f);
@@ -122,7 +133,7 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
 
 void UnitySynthesiserAudioProcessor::releaseResources()
 {
-
+    
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -159,15 +170,14 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
 
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
-    
-    if (!m_playing) return;
-    
-    
+        
     juce::dsp::AudioBlock<float> audioBlock(buffer);
         
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    m_adsr.applyEnvelopeToBuffer(buffer, 0, buffer.getNumSamples());
 }
 
 //==============================================================================
@@ -202,18 +212,51 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new UnitySynthesiserAudioProcessor();
 }
 
+void UnitySynthesiserAudioProcessor::setEnvelopeParameters()
+{
+    m_adsr.setParameters(juce::ADSR::Parameters(m_envelopeAttack, m_envelopeDecay, m_envelopeSustain, m_envelopeRelease));
+}
+
 void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
 {
     if (parameterID == "playing")
     {
         if(newValue == 1)
         {
-            m_playing = true;
+            m_adsr.noteOn();
         }
         else
         {
-            m_playing = false;
+            m_adsr.noteOff();
         }
+    }
+    else if (parameterID == "attack")
+    {
+        m_envelopeAttack = newValue;
+        setEnvelopeParameters();
+        
+    }
+    else if (parameterID == "decay")
+    {
+        m_envelopeDecay = newValue;
+        setEnvelopeParameters();
+    }
+    else if (parameterID == "sustain")
+    {
+        if(newValue > 1)
+        {
+            m_envelopeSustain = 1.0f;
+        }
+        else
+        {
+            m_envelopeSustain = newValue;
+        }
+        setEnvelopeParameters();
+    }
+    else if (parameterID == "release")
+    {
+        m_envelopeRelease = newValue;
+        setEnvelopeParameters();
     }
     else if (parameterID == "waveform")
     {

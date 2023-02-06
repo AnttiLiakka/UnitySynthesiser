@@ -57,19 +57,28 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
+    void setEnvelopeParameters();
+    
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     
-    juce::AudioProcessorValueTreeState m_valueTree;
+    bool m_playing = false;
+    
+    float m_envelopeAttack = 0.1f;
+    float m_envelopeDecay = 0.1f;
+    float m_envelopeSustain = 1.0f;
+    float m_envelopeRelease = 0.1f;
+    
     
     juce::dsp::ProcessSpec m_spec;
     
+    juce::ADSR m_adsr;
     juce::dsp::Oscillator<float> m_osc;
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
-    bool m_playing = false;
+    juce::AudioProcessorValueTreeState m_valueTree;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };
