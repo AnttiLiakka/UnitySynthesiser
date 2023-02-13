@@ -57,7 +57,7 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void setEnvelopeParameters();
+    void updateEnvelopeParameters();
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
@@ -70,6 +70,12 @@ private:
     float m_envelopeSustain = 1.0f;
     float m_envelopeRelease = 0.1f;
     
+    float m_oscFrequency = 440.0;
+    
+    float m_fmModulation = 0.0;
+    float m_fmDepth = 0.0;
+    float m_fmFrequency = 0.0;
+    
     
     juce::dsp::ProcessSpec m_spec;
     
@@ -77,6 +83,8 @@ private:
     juce::dsp::Oscillator<float> m_osc;
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
+    
+    juce::dsp::Oscillator<float> m_fmOsc;
     
     juce::AudioProcessorValueTreeState m_valueTree;
 

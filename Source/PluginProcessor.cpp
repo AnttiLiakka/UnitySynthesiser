@@ -14,6 +14,7 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
         m_osc([](float x) {return std::sin(x);}, 510),
+        m_fmOsc([](float x) {return std::sin(x);}, 510),
         m_valueTree(*this, nullptr, "Parameters",
                     {std::make_unique<juce::AudioParameterBool>("playing", "Playing", 0),
                      std::make_unique<juce::AudioParameterFloat>("attack", "Attack", 0.1f, 10.0f, m_envelopeAttack),
@@ -21,7 +22,9 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                      std::make_unique<juce::AudioParameterFloat>("sustain", "Sustain", 0.1f, 1.0f, m_envelopeSustain),
                      std::make_unique<juce::AudioParameterFloat>("release", "Release", 0.1f, 10.0f, m_envelopeRelease),
                      std::make_unique<juce::AudioParameterChoice>("waveform", "Waveform", juce::StringArray{"Sine", "Saw"}, 0),
-                     std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 10.0f, 20000.0f, 440.0f),
+                     std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 10.0f, 20000.0f, m_oscFrequency),
+                     std::make_unique<juce::AudioParameterFloat>("fmFrequency", "FM Frequency", 0.0f, 20000.0f, m_fmFrequency),
+                     std::make_unique<juce::AudioParameterFloat>("fmDepth", "FM Dept", 0.0f, 1000.0f, m_fmDepth),
                      std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
                      std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", 1),
                      std::make_unique<juce::AudioParameterFloat>("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f)
@@ -34,6 +37,8 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
     m_valueTree.addParameterListener("release", this);
     m_valueTree.addParameterListener("waveform", this);
     m_valueTree.addParameterListener("frequency", this);
+    m_valueTree.addParameterListener("fmFrequency", this);
+    m_valueTree.addParameterListener("fmDepth", this);
     m_valueTree.addParameterListener("gain", this);
     m_valueTree.addParameterListener("filterBypass", this);
     m_valueTree.addParameterListener("cutoff", this);
@@ -44,7 +49,7 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
     m_filter.setResonance(0);
     m_filter.setDrive(1);
     
-    setEnvelopeParameters();
+    updateEnvelopeParameters();
 }
 
 UnitySynthesiserAudioProcessor::~UnitySynthesiserAudioProcessor()
@@ -126,7 +131,10 @@ void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int sampl
     m_filter.prepare(m_spec);
     m_adsr.setSampleRate(sampleRate);
     
+    m_fmOsc.prepare(m_spec);
+    
     m_osc.setFrequency(440.0f);
+    m_fmOsc.setFrequency(5.0f);
     m_gain.setGainLinear(0.5f);
      
 }
@@ -172,7 +180,18 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
         buffer.clear (i, 0, buffer.getNumSamples());
         
     juce::dsp::AudioBlock<float> audioBlock(buffer);
-        
+    
+    //FM sample by sample processing
+    for (int i = 0; i < audioBlock.getNumChannels(); ++i)
+    {
+        for (int s = 0; s < audioBlock.getNumSamples(); ++s)
+        {
+            m_fmModulation = m_fmOsc.processSample(audioBlock.getSample(i, s)) * m_fmDepth;
+            auto freq = m_oscFrequency + m_fmModulation;
+            m_osc.setFrequency(freq >= 0 ? freq : freq * -1.0f);
+        }
+    }
+    
     m_osc.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
     m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
@@ -212,7 +231,7 @@ juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
     return new UnitySynthesiserAudioProcessor();
 }
 
-void UnitySynthesiserAudioProcessor::setEnvelopeParameters()
+void UnitySynthesiserAudioProcessor::updateEnvelopeParameters()
 {
     m_adsr.setParameters(juce::ADSR::Parameters(m_envelopeAttack, m_envelopeDecay, m_envelopeSustain, m_envelopeRelease));
 }
@@ -233,13 +252,13 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     else if (parameterID == "attack")
     {
         m_envelopeAttack = newValue;
-        setEnvelopeParameters();
+        updateEnvelopeParameters();
         
     }
     else if (parameterID == "decay")
     {
         m_envelopeDecay = newValue;
-        setEnvelopeParameters();
+        updateEnvelopeParameters();
     }
     else if (parameterID == "sustain")
     {
@@ -251,12 +270,12 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
         {
             m_envelopeSustain = newValue;
         }
-        setEnvelopeParameters();
+        updateEnvelopeParameters();
     }
     else if (parameterID == "release")
     {
         m_envelopeRelease = newValue;
-        setEnvelopeParameters();
+        updateEnvelopeParameters();
     }
     else if (parameterID == "waveform")
     {
@@ -271,7 +290,16 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     }
     else if (parameterID == "frequency")
     {
-        m_osc.setFrequency(newValue);
+        m_osc.setFrequency(newValue + m_fmModulation);
+        m_oscFrequency = newValue;
+    }
+    else if (parameterID == "fmFrequency")
+    {
+        m_fmOsc.setFrequency(newValue);
+    }
+    else if (parameterID == "fmDepth")
+    {
+        m_fmDepth = newValue;
     }
     else if (parameterID == "gain")
     {
@@ -299,5 +327,6 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     {
         m_filter.setCutoffFrequencyHz(newValue);
     }
+    else jassertfalse; // You probably have a typo somewhere
 }
 
