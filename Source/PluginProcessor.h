@@ -64,6 +64,7 @@ public:
 private:
     
     bool m_playing = false;
+    bool m_playNoise = false;
     
     float m_envelopeAttack = 0.1f;
     float m_envelopeDecay = 0.1f;
@@ -76,6 +77,7 @@ private:
     float m_fmDepth = 0.0;
     float m_fmFrequency = 0.0;
     
+    juce::Random random;
     
     juce::dsp::ProcessSpec m_spec;
     
