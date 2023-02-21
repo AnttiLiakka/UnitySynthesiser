@@ -13,8 +13,7 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
      :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
-        m_osc([](float x) {return std::sin(x);}, 510),
-        m_fmOsc([](float x) {return std::sin(x);}, 510),
+        m_synthesiser(1),
         m_valueTree(*this, nullptr, "Parameters",
                     {std::make_unique<juce::AudioParameterBool>("playing", "Playing", 0),
                      std::make_unique<juce::AudioParameterFloat>("attack", "Attack", 0.1f, 10.0f, m_envelopeAttack),
@@ -24,7 +23,7 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                      std::make_unique<juce::AudioParameterChoice>("waveform", "Waveform", juce::StringArray{"Sine", "Saw", "Square", "Noise"}, 0),
                      std::make_unique<juce::AudioParameterFloat>("frequency", "Frequency", 10.0f, 20000.0f, m_oscFrequency),
                      std::make_unique<juce::AudioParameterFloat>("fmFrequency", "FM Frequency", 0.0f, 20000.0f, m_fmFrequency),
-                     std::make_unique<juce::AudioParameterFloat>("fmDepth", "FM Dept", 0.0f, 1000.0f, m_fmDepth),
+                     std::make_unique<juce::AudioParameterFloat>("fmDepth", "FM Dept", 0.0f, 20000.0f, m_fmDepth),
                      std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
                      std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", 1),
                      std::make_unique<juce::AudioParameterFloat>("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f)
@@ -121,20 +120,16 @@ void UnitySynthesiserAudioProcessor::changeProgramName (int index, const juce::S
 //==============================================================================
 void UnitySynthesiserAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
+    m_synthesiser.prepareToPlay(sampleRate);
     
     m_spec.maximumBlockSize = samplesPerBlock;
     m_spec.sampleRate = sampleRate;
     m_spec.numChannels = getTotalNumOutputChannels();
     
-    m_osc.prepare(m_spec);
     m_gain.prepare(m_spec);
     m_filter.prepare(m_spec);
     m_adsr.setSampleRate(sampleRate);
     
-    m_fmOsc.prepare(m_spec);
-    
-    m_osc.setFrequency(440.0f);
-    m_fmOsc.setFrequency(5.0f);
     m_gain.setGainLinear(0.5f);
      
 }
@@ -180,6 +175,13 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
         buffer.clear (i, 0, buffer.getNumSamples());
         
     juce::dsp::AudioBlock<float> audioBlock(buffer);
+    
+    m_synthesiser.processNextBlock(audioBlock);
+    
+    m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
+    
+    
+    /* OLD CODE
     if (!m_playNoise)
     {
         //FM sample by sample processing
@@ -205,9 +207,9 @@ void UnitySynthesiserAudioProcessor::processBlock (juce::AudioBuffer<float>& buf
         }
     }
     m_filter.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    m_gain.process(juce::dsp::ProcessContextReplacing<float>(audioBlock));
-    
+
     m_adsr.applyEnvelopeToBuffer(buffer, 0, buffer.getNumSamples());
+    */
 }
 
 //==============================================================================
@@ -293,17 +295,17 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
         if (newValue == 0)
         {
             m_playNoise = false;
-            m_osc.initialise([](float x) {return std::sin(x);}, 510);
+            //m_osc.initialise([](float x) {return std::sin(x);}, 510);
         }
         else if (newValue == 1)
         {
             m_playNoise = false;
-            m_osc.initialise([](float x) {return x / juce::MathConstants<float>::pi;}, 510);
+            //m_osc.initialise([](float x) {return x / juce::MathConstants<float>::pi;}, 510);
         }
         else if (newValue == 2)
         {
             m_playNoise = false;
-            m_osc.initialise([](float x) { return x < 0.0f ? -1.0f : 1.0f;}, 510);
+           // m_osc.initialise([](float x) { return x < 0.0f ? -1.0f : 1.0f;}, 510);
         }
         else if (newValue == 3)
         {
@@ -312,12 +314,12 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     }
     else if (parameterID == "frequency")
     {
-        m_osc.setFrequency(newValue + m_fmModulation);
-        m_oscFrequency = newValue;
+        //m_synthesiser.getOperator()->m_baseFrequency = newValue;
+        m_synthesiser.getOperator()->setFrequency(newValue);
     }
     else if (parameterID == "fmFrequency")
     {
-        m_fmOsc.setFrequency(newValue);
+        // m_fmOsc.setFrequency(newValue);
     }
     else if (parameterID == "fmDepth")
     {

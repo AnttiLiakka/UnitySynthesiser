@@ -9,6 +9,8 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "FmSynthesiser.h"
+#include "FmOperator.h"
 
 //==============================================================================
 /**
@@ -63,6 +65,8 @@ public:
 
 private:
     
+    FmSynthesiser m_synthesiser;
+    
     bool m_playing = false;
     bool m_playNoise = false;
     
@@ -74,19 +78,16 @@ private:
     float m_oscFrequency = 440.0;
     
     float m_fmModulation = 0.0;
-    float m_fmDepth = 0.0;
-    float m_fmFrequency = 0.0;
+    float m_fmDepth = 10000.0f;
+    float m_fmFrequency = 10000.0f;
     
     juce::Random random;
     
     juce::dsp::ProcessSpec m_spec;
     
     juce::ADSR m_adsr;
-    juce::dsp::Oscillator<float> m_osc;
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
-    
-    juce::dsp::Oscillator<float> m_fmOsc;
     
     juce::AudioProcessorValueTreeState m_valueTree;
 

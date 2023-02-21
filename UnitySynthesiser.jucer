@@ -5,6 +5,13 @@
               pluginCharacteristicsValue="pluginIsSynth" pluginFormats="buildStandalone,buildUnity">
   <MAINGROUP id="vxB1Yl" name="UnitySynthesiser">
     <GROUP id="{5BECE637-4F47-39BA-744A-EC78F31EFA87}" name="Source">
+      <GROUP id="{74E23495-EA61-7A4F-5788-253E0C1D8E73}" name="FmSynth">
+        <FILE id="ze0IH5" name="FmOperator.cpp" compile="1" resource="0" file="Source/FmOperator.cpp"/>
+        <FILE id="lseqiD" name="FmOperator.h" compile="0" resource="0" file="Source/FmOperator.h"/>
+        <FILE id="yV5mtT" name="FmSynthesiser.cpp" compile="1" resource="0"
+              file="Source/FmSynthesiser.cpp"/>
+        <FILE id="k5h6Fi" name="FmSynthesiser.h" compile="0" resource="0" file="Source/FmSynthesiser.h"/>
+      </GROUP>
       <FILE id="Y8lXL4" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="EeUZix" name="PluginProcessor.h" compile="0" resource="0"

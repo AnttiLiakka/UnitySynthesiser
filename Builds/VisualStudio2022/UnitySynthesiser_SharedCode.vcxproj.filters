@@ -2,6 +2,9 @@
 
 <Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
+    <Filter Include="UnitySynthesiser\Source\FmSynth">
+      <UniqueIdentifier>{01D1AA75-6A3B-CD54-665B-6FEE007D6940}</UniqueIdentifier>
+    </Filter>
     <Filter Include="UnitySynthesiser\Source">
       <UniqueIdentifier>{E86B361C-BDA1-FBA0-F7F3-001FD99180BB}</UniqueIdentifier>
     </Filter>
@@ -601,6 +604,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\FmOperator.cpp">
+      <Filter>UnitySynthesiser\Source\FmSynth</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\FmSynthesiser.cpp">
+      <Filter>UnitySynthesiser\Source\FmSynth</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\PluginProcessor.cpp">
       <Filter>UnitySynthesiser\Source</Filter>
     </ClCompile>
@@ -3021,6 +3030,12 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\FmOperator.h">
+      <Filter>UnitySynthesiser\Source\FmSynth</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\FmSynthesiser.h">
+      <Filter>UnitySynthesiser\Source\FmSynth</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\PluginProcessor.h">
       <Filter>UnitySynthesiser\Source</Filter>
     </ClInclude>
