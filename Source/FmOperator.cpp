@@ -43,4 +43,3 @@ void FmOperator::setFrequency(float& frequency)
 {
     m_baseFrequency = frequency;
 }
-

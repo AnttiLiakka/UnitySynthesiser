@@ -10,15 +10,24 @@
 
 #include "FmSynthesiser.h"
 
-FmSynthesiser::FmSynthesiser(int numOperators) : m_operator(440.0f)
+FmSynthesiser::FmSynthesiser(int numOperators) : m_numOperators(numOperators)
 {
-
+    for (int i = 0; i < m_numOperators; ++i)
+    {
+        m_operators.push_back(440);
+    }
 }
 
 
 void FmSynthesiser::prepareToPlay(double sampleRate)
 {
-    m_operator.prepareToPlay(sampleRate);
+    getOperator(0)->setFrequency(m_operator01Freq);
+    getOperator(1)->setFrequency(m_operator02Freq);
+    
+    for (int i = 0; i < m_numOperators; ++i)
+    {
+        m_operators[i].prepareToPlay(sampleRate);
+    }
 }
 
 void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
@@ -28,7 +37,14 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     
     for (int n = 0; n < block.getNumSamples(); ++n)
     {
-        auto currentSample = m_operator.getNextSample(0);
+        auto* operator01 = getOperator(0);
+        auto* operator02 = getOperator(1);
+        
+        auto op02Sample = operator02->getNextSample(0, m_operator02Depth);
+        
+        auto currentSample = operator01->getNextSample(op02Sample);
+        
+        if(currentSample > 1) jassertfalse;
         
         leftChannel[n] = currentSample;
         rightChannel[n] = currentSample;
@@ -36,9 +52,9 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
 
 }
 
-FmOperator* FmSynthesiser::getOperator()
+FmOperator* FmSynthesiser::getOperator(int index)
 {
-    return &m_operator;
+    return &m_operators[index];
 }
 
 

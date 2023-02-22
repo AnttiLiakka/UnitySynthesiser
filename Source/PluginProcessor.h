@@ -10,7 +10,6 @@
 
 #include <JuceHeader.h>
 #include "FmSynthesiser.h"
-#include "FmOperator.h"
 
 //==============================================================================
 /**
@@ -21,6 +20,7 @@ class UnitySynthesiserAudioProcessor  : public juce::AudioProcessor,
                              , public juce::AudioProcessorARAExtension
                             #endif
 {
+    
 public:
     //==============================================================================
     UnitySynthesiserAudioProcessor();
@@ -75,11 +75,10 @@ private:
     float m_envelopeSustain = 1.0f;
     float m_envelopeRelease = 0.1f;
     
-    float m_oscFrequency = 440.0;
+    float m_operator01Frequency = 440.0;
     
-    float m_fmModulation = 0.0;
-    float m_fmDepth = 10000.0f;
-    float m_fmFrequency = 10000.0f;
+    float m_operator02Frequency = 10.0f;
+    float m_operator02Depth = 1000.0f;
     
     juce::Random random;
     
