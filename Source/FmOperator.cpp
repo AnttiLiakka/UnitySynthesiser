@@ -26,14 +26,17 @@ void FmOperator::prepareToPlay(double sampleRate)
 {
     m_sampleRate = sampleRate;
     updateAngleDelta();
+    
+    m_envelope.setSampleRate(sampleRate);
+    m_envelope.setParameters(juce::ADSR::Parameters(1, 1, 1, 1));
 }
 
-float FmOperator::getNextSample(float modulationSample, double modulationDepth)
+float FmOperator::getNextSample()
 {
-    auto currentSample = (float) std::sin(m_currentAngle) * modulationDepth;
+    auto currentSample = (float) std::sin(m_currentAngle) * (m_modulationDepth * m_envelope.getNextSample());
     m_currentAngle += m_angleDelta;
     
-    m_frequency = m_baseFrequency + modulationSample;
+    m_frequency = m_baseFrequency + (m_modulationSample);
     updateAngleDelta();
     
     return currentSample;
@@ -42,4 +45,19 @@ float FmOperator::getNextSample(float modulationSample, double modulationDepth)
 void FmOperator::setFrequency(float& frequency)
 {
     m_baseFrequency = frequency;
+}
+
+void FmOperator::setModSample(float& sample)
+{
+    m_modulationSample = sample;
+}
+
+void FmOperator::setModDepth(float& depth)
+{
+    m_modulationDepth = depth;
+}
+
+juce::ADSR* FmOperator::getEnvelope()
+{
+    return &m_envelope;
 }

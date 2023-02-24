@@ -15,25 +15,27 @@
 
 class FmSynthesiser
 {
-    friend class UnitySynthesiserAudioProcessor;
 public:
     
-    FmSynthesiser(int numOperators);
+    FmSynthesiser(const int numOperators);
     
     void prepareToPlay(double sampleRate);
     
     void processNextBlock(juce::dsp::AudioBlock<float> block);
+    
+    void noteOn();
+    
+    void noteOff();
+    
+    void changeAlgorithm(int index);
     
     FmOperator* getOperator(int index);
     
 private:
     
     std::vector<FmOperator> m_operators;
-    int m_numOperators;
     
-    float m_operator01Freq = 440;
-    float m_operator01Depth = 1;
+    const int m_numOperators;
+    int m_algorithm = 1;
     
-    float m_operator02Freq = 0;
-    float m_operator02Depth = 1;
 };

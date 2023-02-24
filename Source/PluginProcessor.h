@@ -67,28 +67,32 @@ private:
     
     FmSynthesiser m_synthesiser;
     
-    bool m_playing = false;
-    bool m_playNoise = false;
-    
-    float m_envelopeAttack = 0.1f;
-    float m_envelopeDecay = 0.1f;
-    float m_envelopeSustain = 1.0f;
-    float m_envelopeRelease = 0.1f;
-    
-    float m_operator01Frequency = 440.0;
-    
-    float m_operator02Frequency = 10.0f;
-    float m_operator02Depth = 1000.0f;
-    
-    juce::Random random;
-    
+    juce::Random m_random;
     juce::dsp::ProcessSpec m_spec;
-    
-    juce::ADSR m_adsr;
+    juce::ADSR m_noiseEnvelope;
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
     juce::AudioProcessorValueTreeState m_valueTree;
+    
+    bool m_playing = false;
+    bool m_playNoise = false;
+    
+    float m_noiseEnvelopeA = 0.1f;
+    float m_noiseEnvelopeD = 0.1f;
+    float m_noiseEnvelopeS = 1.0f;
+    float m_noiseEnvelopeR = 10.0f;
+    
+    float m_operator01Frequency = 1760.0;
+    
+    float m_operator02Frequency = 1320.0f;
+    float m_operator02Depth = 1000.0f;
+    
+    float m_operator03Frequency = 880.0f;
+    float m_operator03Depth = 1000.0f;
+    
+    float m_operator04Frequency = 440.0f;
+    float m_operator04Depth = 1000.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };

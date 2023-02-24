@@ -23,11 +23,19 @@ public:
     
     void prepareToPlay(double sampleRate);
     
-    float getNextSample(float modulationSample, double modulationDepth = 1);
+    float getNextSample();
     
     void setFrequency(float& frequency);
     
+    void setModSample(float& sample);
+    
+    void setModDepth(float& depth);
+    
+    juce::ADSR* getEnvelope();
+    
 private:
+    
+    juce::ADSR m_envelope;
     
     double m_currentAngle = 0;
     double m_angleDelta = 0;
@@ -35,5 +43,7 @@ private:
     
     float m_frequency;
     float m_baseFrequency;
+    float m_modulationSample = 0;
+    float m_modulationDepth = 1;
     
 };

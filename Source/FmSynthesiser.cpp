@@ -10,7 +10,7 @@
 
 #include "FmSynthesiser.h"
 
-FmSynthesiser::FmSynthesiser(int numOperators) : m_numOperators(numOperators)
+FmSynthesiser::FmSynthesiser(const int numOperators) : m_numOperators(numOperators)
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
@@ -20,10 +20,7 @@ FmSynthesiser::FmSynthesiser(int numOperators) : m_numOperators(numOperators)
 
 
 void FmSynthesiser::prepareToPlay(double sampleRate)
-{
-    getOperator(0)->setFrequency(m_operator01Freq);
-    getOperator(1)->setFrequency(m_operator02Freq);
-    
+{    
     for (int i = 0; i < m_numOperators; ++i)
     {
         m_operators[i].prepareToPlay(sampleRate);
@@ -35,21 +32,136 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     auto* leftChannel = block.getChannelPointer(0);
     auto* rightChannel = block.getChannelPointer(1);
     
-    for (int n = 0; n < block.getNumSamples(); ++n)
-    {
-        auto* operator01 = getOperator(0);
-        auto* operator02 = getOperator(1);
+    auto* operator01 = getOperator(0);
+    auto* operator02 = getOperator(1);
+    auto* operator03 = getOperator(2);
+    auto* operator04 = getOperator(3);
+    
+    switch (m_algorithm) {
         
-        auto op02Sample = operator02->getNextSample(0, m_operator02Depth);
+        //Topology 1
+        case 1:
+            
+            for (int n = 0; n < block.getNumSamples(); ++n)
+            {
+                auto op04Sample = operator04->getNextSample();
+            
+                operator03->setModSample(op04Sample);
+                auto op03Sample = operator03->getNextSample();
+            
+                operator02->setModSample(op03Sample);
+                auto op02Sample = operator02->getNextSample();
+            
+                operator01->setModSample(op02Sample);
+                auto op01Sample = operator01->getNextSample();
+                
+                if (op01Sample > 1) jassertfalse;
+                
+                leftChannel[n] = op01Sample;
+                rightChannel[n] = op01Sample;
+            
+            }
+            break;
         
-        auto currentSample = operator01->getNextSample(op02Sample);
-        
-        if(currentSample > 1) jassertfalse;
-        
-        leftChannel[n] = currentSample;
-        rightChannel[n] = currentSample;
+        //Topology 2
+        case 2:
+            
+            for (int n = 0; n < block.getNumSamples(); ++n)
+            {
+                auto op03Sample = operator03->getNextSample();
+                
+                auto op04Sample = operator03->getNextSample();
+                
+                float modSample = op03Sample + op04Sample;
+                operator02->setModSample(modSample);
+                auto op02Sample = operator02->getNextSample();
+                
+                operator01->setModSample(op02Sample);
+                auto op01Sample = operator01->getNextSample();
+                
+                if (op01Sample > 1) jassertfalse;
+                
+                leftChannel[n] = op01Sample;
+                rightChannel[n] = op01Sample;
+                
+            }
+            break;
+        //Topology 3
+        case 3:
+            
+            for (int n = 0; n < block.getNumSamples(); ++n)
+            {
+                auto op03Sample = operator03->getNextSample();
+                
+                auto op04Sample = operator04->getNextSample();
+                
+                operator02->setModSample(op03Sample);
+                auto op02Sample = operator02->getNextSample();
+                
+                float modSample = op02Sample + op04Sample;
+                operator01->setModSample(modSample);
+                auto op01Sample = operator01->getNextSample();
+                
+                if (op01Sample > 1) jassertfalse;
+                
+                leftChannel[n] = op01Sample;
+                rightChannel[n] = op01Sample;
+                
+            }
+            break;
+        //Topology 4
+        case 4:
+            
+            for (int n = 0; n < block.getNumSamples(); ++n)
+            {
+                auto op04Sample = operator04->getNextSample();
+                
+                operator02->setModSample(op04Sample);
+                operator03->setModSample(op04Sample);
+                
+                auto op03Sample = operator03->getNextSample();
+                auto op02Sample = operator02->getNextSample();
+                
+                float modSample = op02Sample + op03Sample;
+                
+                operator01->setModSample(modSample);
+                
+                auto op01Sample = operator01->getNextSample();
+                
+                if (op01Sample > 1) jassertfalse;
+                
+                leftChannel[n] = op01Sample;
+                rightChannel[n] = op01Sample;
+                
+            }
+            
+            break;
+        //Epic fail
+        default:
+            jassertfalse; //Change to return on release
+            break;
     }
+}
 
+void FmSynthesiser::noteOn()
+{
+    for (int i = 0; i < m_numOperators; ++i)
+    {
+        m_operators[i].getEnvelope()->noteOn();
+    }
+}
+
+void FmSynthesiser::noteOff()
+{
+    for (int i = 0; i < m_numOperators; ++i)
+    {
+        m_operators[i].getEnvelope()->noteOff();
+    }
+}
+
+void FmSynthesiser::changeAlgorithm(int index)
+{
+    m_algorithm = index;
 }
 
 FmOperator* FmSynthesiser::getOperator(int index)
