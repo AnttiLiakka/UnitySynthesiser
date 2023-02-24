@@ -14,6 +14,7 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
         m_synthesiser(4),
+        m_frequencyRange(juce::NormalisableRange<float>(0, 14080, 220)),
         m_valueTree(*this, nullptr, "Parameters",
                     {std::make_unique<juce::AudioParameterBool>("playing", "Playing", 0),
                      std::make_unique<juce::AudioParameterChoice>("mode", "Mode", juce::StringArray{"FM", "Noise"}, 0),
@@ -22,13 +23,29 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                      std::make_unique<juce::AudioParameterFloat>("nSustain", "Noise Sustain", 0.1f, 1.0f, m_noiseEnvelopeS),
                      std::make_unique<juce::AudioParameterFloat>("nRelease", "Noise Release", 0.1f, 10.0f, m_noiseEnvelopeR),
                      std::make_unique<juce::AudioParameterInt>("algorithm", "FM Algorithm", 1, 4, 1),
-                     std::make_unique<juce::AudioParameterFloat>("operator01Frequency", "Operator01 Frequency", 0.0f, 20000.0f, m_operator01Frequency),
-                     std::make_unique<juce::AudioParameterFloat>("operator02Frequency", "Operator02 Frequency", 0.0f, 20000.0f, m_operator02Frequency),
+                     std::make_unique<juce::AudioParameterFloat>("operator01Frequency", "Operator01 Frequency", m_frequencyRange, m_operator01Frequency),
+                     std::make_unique<juce::AudioParameterFloat>("op01A", "Operator01 Attack", 0.1f, 10.0f, m_synthesiser.getOperator(0)->getAttack()),
+                     std::make_unique<juce::AudioParameterFloat>("op01D", "Operator01 Decay", 0.1, 10.0f, m_synthesiser.getOperator(0)->getDecay()),
+                     std::make_unique<juce::AudioParameterFloat>("op01S", "Operator01 Sustain", 0.1f, 1.0f, m_synthesiser.getOperator(0)->getSustain()),
+                     std::make_unique<juce::AudioParameterFloat>("op01R", "Operator01 Release", 0.1f, 10.0f, m_synthesiser.getOperator(0)->getRelease()),
+                     std::make_unique<juce::AudioParameterFloat>("operator02Frequency", "Operator02 Frequency", m_frequencyRange, m_operator02Frequency),
                      std::make_unique<juce::AudioParameterFloat>("operator02Depth", "Operator02 Depth", 0.0f, 20000.0f, m_operator02Depth),
-                     std::make_unique<juce::AudioParameterFloat>("operator03Frequency", "Operator03 Frequency", 0.0f, 20000.0f, m_operator03Frequency),
+                     std::make_unique<juce::AudioParameterFloat>("op02A", "Operator02 Attack", 0.1f, 10.0f, m_synthesiser.getOperator(1)->getAttack()),
+                     std::make_unique<juce::AudioParameterFloat>("op02D", "Operator02 Decay", 0.1, 10.0f, m_synthesiser.getOperator(1)->getDecay()),
+                     std::make_unique<juce::AudioParameterFloat>("op02S", "Operator02 Sustain", 0.1f, 1.0f, m_synthesiser.getOperator(1)->getSustain()),
+                     std::make_unique<juce::AudioParameterFloat>("op02R", "Operator02 Release", 0.1f, 10.0f, m_synthesiser.getOperator(1)->getRelease()),
+                     std::make_unique<juce::AudioParameterFloat>("operator03Frequency", "Operator03 Frequency", m_frequencyRange, m_operator03Frequency),
                      std::make_unique<juce::AudioParameterFloat>("operator03Depth", "Operator03 Depth", 0.0f, 20000.0f, m_operator03Depth),
-                     std::make_unique<juce::AudioParameterFloat>("operator04Frequency", "Operator04 Frequency", 0.0f, 20000.0f, m_operator04Frequency),
+                     std::make_unique<juce::AudioParameterFloat>("op03A", "Operator03 Attack", 0.1f, 10.0f, m_synthesiser.getOperator(2)->getAttack()),
+                     std::make_unique<juce::AudioParameterFloat>("op03D", "Operator03 Decay", 0.1, 10.0f, m_synthesiser.getOperator(2)->getDecay()),
+                     std::make_unique<juce::AudioParameterFloat>("op03S", "Operator03 Sustain", 0.1f, 1.0f, m_synthesiser.getOperator(2)->getSustain()),
+                     std::make_unique<juce::AudioParameterFloat>("op03R", "Operator03 Release", 0.1f, 10.0f, m_synthesiser.getOperator(2)->getRelease()),
+                     std::make_unique<juce::AudioParameterFloat>("operator04Frequency", "Operator04 Frequency", m_frequencyRange, m_operator04Frequency),
                      std::make_unique<juce::AudioParameterFloat>("operator04Depth", "Operator04 Depth", 0.0f, 20000.0f, m_operator04Depth),
+                    std::make_unique<juce::AudioParameterFloat>("op04A", "Operator04 Attack", 0.1f, 10.0f, m_synthesiser.getOperator(3)->getAttack()),
+                    std::make_unique<juce::AudioParameterFloat>("op04D", "Operator04 Decay", 0.1, 10.0f, m_synthesiser.getOperator(3)->getDecay()),
+                    std::make_unique<juce::AudioParameterFloat>("op04S", "Operator04 Sustain", 0.1f, 1.0f, m_synthesiser.getOperator(3)->getSustain()),
+                    std::make_unique<juce::AudioParameterFloat>("op04R", "Operator04 Release", 0.1f, 10.0f, m_synthesiser.getOperator(3)->getRelease()),
                      std::make_unique<juce::AudioParameterFloat>("gain", "Gain", 0.0f, 1.0f, 0.5f),
                      std::make_unique<juce::AudioParameterBool>("filterBypass", "Filter Bypass", 1),
                      std::make_unique<juce::AudioParameterFloat>("cutoff", "Cutoff", 50.0f, 20000.0f, 20000.0f)
@@ -39,15 +56,40 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
     m_valueTree.addParameterListener("nDecay", this);
     m_valueTree.addParameterListener("nSustain", this);
     m_valueTree.addParameterListener("nRelease", this);
+    
     m_valueTree.addParameterListener("mode", this);
+    
     m_valueTree.addParameterListener("algorithm", this);
+    
     m_valueTree.addParameterListener("operator01Frequency", this);
     m_valueTree.addParameterListener("operator02Frequency", this);
     m_valueTree.addParameterListener("operator03Frequency", this);
     m_valueTree.addParameterListener("operator04Frequency", this);
+    
     m_valueTree.addParameterListener("operator02Depth", this);
     m_valueTree.addParameterListener("operator03Depth", this);
     m_valueTree.addParameterListener("operator04Depth", this);
+    
+    m_valueTree.addParameterListener("op01A", this);
+    m_valueTree.addParameterListener("op01D", this);
+    m_valueTree.addParameterListener("op01S", this);
+    m_valueTree.addParameterListener("op01R", this);
+    
+    m_valueTree.addParameterListener("op02A", this);
+    m_valueTree.addParameterListener("op02D", this);
+    m_valueTree.addParameterListener("op02S", this);
+    m_valueTree.addParameterListener("op02R", this);
+    
+    m_valueTree.addParameterListener("op03A", this);
+    m_valueTree.addParameterListener("op03D", this);
+    m_valueTree.addParameterListener("op03S", this);
+    m_valueTree.addParameterListener("op03R", this);
+    
+    m_valueTree.addParameterListener("op04A", this);
+    m_valueTree.addParameterListener("op04D", this);
+    m_valueTree.addParameterListener("op04S", this);
+    m_valueTree.addParameterListener("op04R", this);
+    
     m_valueTree.addParameterListener("gain", this);
     m_valueTree.addParameterListener("filterBypass", this);
     m_valueTree.addParameterListener("cutoff", this);
@@ -338,6 +380,70 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     else if (parameterID == "operator04Depth")
     {
         m_synthesiser.getOperator(3)->setModDepth(newValue);
+    }
+    else if (parameterID == "op01A")
+    {
+        m_synthesiser.getOperator(0)->setAttack(newValue);
+    }
+    else if (parameterID == "op01D")
+    {
+        m_synthesiser.getOperator(0)->setDecay(newValue);
+    }
+    else if (parameterID == "op01S")
+    {
+        m_synthesiser.getOperator(0)->setSustain(newValue);
+    }
+    else if (parameterID == "op01R")
+    {
+        m_synthesiser.getOperator(0)->setRelease(newValue);
+    }
+    else if (parameterID == "op02A")
+    {
+        m_synthesiser.getOperator(1)->setAttack(newValue);
+    }
+    else if (parameterID == "op02D")
+    {
+        m_synthesiser.getOperator(1)->setDecay(newValue);
+    }
+    else if (parameterID == "op02S")
+    {
+        m_synthesiser.getOperator(1)->setSustain(newValue);
+    }
+    else if (parameterID == "op02R")
+    {
+        m_synthesiser.getOperator(1)->setRelease(newValue);
+    }
+    else if (parameterID == "op03A")
+    {
+        m_synthesiser.getOperator(2)->setAttack(newValue);
+    }
+    else if (parameterID == "op03D")
+    {
+        m_synthesiser.getOperator(2)->setDecay(newValue);
+    }
+    else if (parameterID == "op03S")
+    {
+        m_synthesiser.getOperator(2)->setSustain(newValue);
+    }
+    else if (parameterID == "op03R")
+    {
+        m_synthesiser.getOperator(2)->setRelease(newValue);
+    }
+    else if (parameterID == "op04A")
+    {
+        m_synthesiser.getOperator(3)->setAttack(newValue);
+    }
+    else if (parameterID == "op04D")
+    {
+        m_synthesiser.getOperator(3)->setDecay(newValue);
+    }
+    else if (parameterID == "op04S")
+    {
+        m_synthesiser.getOperator(3)->setSustain(newValue);
+    }
+    else if (parameterID == "op04R")
+    {
+        m_synthesiser.getOperator(3)->setRelease(newValue);
     }
     else if (parameterID == "gain")
     {

@@ -31,6 +31,22 @@ public:
     
     void setModDepth(float& depth);
     
+    void setAttack(float& attack);
+    
+    void setDecay(float& decay);
+    
+    void setSustain(float& sustain);
+    
+    void setRelease(float& release);
+    
+    float getAttack();
+    
+    float getDecay();
+    
+    float getSustain();
+    
+    float getRelease();
+    
     juce::ADSR* getEnvelope();
     
 private:
@@ -46,4 +62,10 @@ private:
     float m_modulationSample = 0;
     float m_modulationDepth = 1;
     
+    float m_attack = 1;
+    float m_decay = 1;
+    float m_sustain = 0.5f;
+    float m_release = 1;
+    
+    juce::ADSR::Parameters m_envelopeParameters;
 };

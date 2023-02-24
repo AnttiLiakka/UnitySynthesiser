@@ -10,8 +10,10 @@
 
 #include "FmOperator.h"
 
-FmOperator::FmOperator(float baseFrequency) : m_frequency(baseFrequency),
-                                              m_baseFrequency(baseFrequency)
+FmOperator::FmOperator(float baseFrequency) :
+                                            m_frequency(baseFrequency),
+                                            m_baseFrequency(baseFrequency),
+                                            m_envelopeParameters(m_attack, m_decay, m_sustain, m_release)
 {
     
 }
@@ -28,7 +30,7 @@ void FmOperator::prepareToPlay(double sampleRate)
     updateAngleDelta();
     
     m_envelope.setSampleRate(sampleRate);
-    m_envelope.setParameters(juce::ADSR::Parameters(1, 1, 1, 1));
+    m_envelope.setParameters(juce::ADSR::Parameters(m_attack, m_decay, m_sustain, m_release));
 }
 
 float FmOperator::getNextSample()
@@ -55,6 +57,50 @@ void FmOperator::setModSample(float& sample)
 void FmOperator::setModDepth(float& depth)
 {
     m_modulationDepth = depth;
+}
+
+void FmOperator::setAttack(float& attack)
+{
+    if(m_envelope.isActive()) m_envelope.reset();
+    m_attack = attack;
+}
+
+void FmOperator::setDecay(float& decay)
+{
+    if(m_envelope.isActive()) m_envelope.reset();
+    m_decay = decay;
+}
+
+void FmOperator::setSustain(float &sustain)
+{
+    if(m_envelope.isActive()) m_envelope.reset();
+    m_sustain = sustain;
+}
+
+void FmOperator::setRelease(float &release)
+{
+    if(m_envelope.isActive()) m_envelope.reset();
+    m_release = release;
+}
+
+float FmOperator::getAttack()
+{
+    return m_attack;
+}
+
+float FmOperator::getDecay()
+{
+    return m_decay;
+}
+
+float FmOperator::getSustain()
+{
+    return m_sustain;
+}
+
+float FmOperator::getRelease()
+{
+    return m_release;
 }
 
 juce::ADSR* FmOperator::getEnvelope()
