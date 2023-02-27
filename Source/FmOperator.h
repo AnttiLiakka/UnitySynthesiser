@@ -47,6 +47,8 @@ public:
     
     float getRelease();
     
+    void updateEnvelopeParameters();
+    
     juce::ADSR* getEnvelope();
     
 private:
@@ -64,8 +66,7 @@ private:
     
     float m_attack = 1;
     float m_decay = 1;
-    float m_sustain = 0.5f;
+    float m_sustain = 0.0001f;
     float m_release = 1;
     
-    juce::ADSR::Parameters m_envelopeParameters;
 };

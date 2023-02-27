@@ -12,8 +12,7 @@
 
 FmOperator::FmOperator(float baseFrequency) :
                                             m_frequency(baseFrequency),
-                                            m_baseFrequency(baseFrequency),
-                                            m_envelopeParameters(m_attack, m_decay, m_sustain, m_release)
+                                            m_baseFrequency(baseFrequency)
 {
     
 }
@@ -30,7 +29,7 @@ void FmOperator::prepareToPlay(double sampleRate)
     updateAngleDelta();
     
     m_envelope.setSampleRate(sampleRate);
-    m_envelope.setParameters(juce::ADSR::Parameters(m_attack, m_decay, m_sustain, m_release));
+    updateEnvelopeParameters();
 }
 
 float FmOperator::getNextSample()
@@ -47,40 +46,43 @@ float FmOperator::getNextSample()
 void FmOperator::setFrequency(float& frequency)
 {
     m_baseFrequency = frequency;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setModSample(float& sample)
 {
     m_modulationSample = sample;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setModDepth(float& depth)
 {
     m_modulationDepth = depth;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setAttack(float& attack)
 {
-    if(m_envelope.isActive()) m_envelope.reset();
     m_attack = attack;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setDecay(float& decay)
 {
-    if(m_envelope.isActive()) m_envelope.reset();
     m_decay = decay;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setSustain(float &sustain)
 {
-    if(m_envelope.isActive()) m_envelope.reset();
     m_sustain = sustain;
+    updateEnvelopeParameters();
 }
 
 void FmOperator::setRelease(float &release)
 {
-    if(m_envelope.isActive()) m_envelope.reset();
     m_release = release;
+    updateEnvelopeParameters();
 }
 
 float FmOperator::getAttack()
@@ -101,6 +103,11 @@ float FmOperator::getSustain()
 float FmOperator::getRelease()
 {
     return m_release;
+}
+
+void FmOperator::updateEnvelopeParameters()
+{
+    m_envelope.setParameters(juce::ADSR::Parameters(m_attack, m_decay, m_sustain, m_release));
 }
 
 juce::ADSR* FmOperator::getEnvelope()
