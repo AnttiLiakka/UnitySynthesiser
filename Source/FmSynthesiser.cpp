@@ -10,11 +10,12 @@
 
 #include "FmSynthesiser.h"
 
-FmSynthesiser::FmSynthesiser(const int numOperators) : m_numOperators(numOperators)
+FmSynthesiser::FmSynthesiser(juce::AudioProcessorValueTreeState& parameters, const int numOperators) : m_parameters(parameters),
+                                                                                                       m_numOperators(numOperators)
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
-        m_operators.push_back(440);
+        m_operators.push_back(0);
     }
 }
 
@@ -36,6 +37,37 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     auto* operator02 = getOperator(1);
     auto* operator03 = getOperator(2);
     auto* operator04 = getOperator(3);
+    
+    operator01->setFrequency(m_parameters.getRawParameterValue("operator01Frequency")->load());
+    operator01->updateEnvelopeParameters(
+                                         m_parameters.getRawParameterValue("op01A")->load(),
+                                         m_parameters.getRawParameterValue("op01D")->load(),
+                                         m_parameters.getRawParameterValue("op01S")->load(),
+                                         m_parameters.getRawParameterValue("op01R")->load());
+    
+    operator02->setFrequency(m_parameters.getRawParameterValue("operator02Frequency")->load());
+    operator02->setModDepth(m_parameters.getRawParameterValue("operator02Depth")->load());
+    operator02->updateEnvelopeParameters(
+                                         m_parameters.getRawParameterValue("op02A")->load(),
+                                         m_parameters.getRawParameterValue("op02D")->load(),
+                                         m_parameters.getRawParameterValue("op02S")->load(),
+                                         m_parameters.getRawParameterValue("op02R")->load());
+    
+    operator03->setFrequency(m_parameters.getRawParameterValue("operator03Frequency")->load());
+    operator03->setModDepth(m_parameters.getRawParameterValue("operator03Depth")->load());
+    operator03->updateEnvelopeParameters(
+                                         m_parameters.getRawParameterValue("op03A")->load(),
+                                         m_parameters.getRawParameterValue("op03D")->load(),
+                                         m_parameters.getRawParameterValue("op03S")->load(),
+                                         m_parameters.getRawParameterValue("op03R")->load());
+    
+    operator04->setFrequency(m_parameters.getRawParameterValue("operator04Frequency")->load());
+    operator04->setModDepth(m_parameters.getRawParameterValue("operator04Depth")->load());
+    operator04->updateEnvelopeParameters(
+                                         m_parameters.getRawParameterValue("op04A")->load(),
+                                         m_parameters.getRawParameterValue("op04D")->load(),
+                                         m_parameters.getRawParameterValue("op04S")->load(),
+                                         m_parameters.getRawParameterValue("op04R")->load());
     
     switch (m_algorithm) {
         

@@ -25,29 +25,13 @@ public:
     
     float getNextSample();
     
-    void setFrequency(float& frequency);
+    void setFrequency(float frequency);
     
-    void setModSample(float& sample);
+    void setModSample(float sample);
     
-    void setModDepth(float& depth);
+    void setModDepth(float depth);
     
-    void setAttack(float& attack);
-    
-    void setDecay(float& decay);
-    
-    void setSustain(float& sustain);
-    
-    void setRelease(float& release);
-    
-    float getAttack();
-    
-    float getDecay();
-    
-    float getSustain();
-    
-    float getRelease();
-    
-    void updateEnvelopeParameters();
+    void updateEnvelopeParameters(float attack, float decay, float sustain, float release);
     
     juce::ADSR* getEnvelope();
     
@@ -63,10 +47,5 @@ private:
     float m_baseFrequency;
     float m_modulationSample = 0;
     float m_modulationDepth = 1;
-    
-    float m_attack = 1;
-    float m_decay = 1;
-    float m_sustain = 0.0001f;
-    float m_release = 1;
     
 };
