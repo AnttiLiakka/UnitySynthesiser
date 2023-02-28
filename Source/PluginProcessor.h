@@ -68,6 +68,7 @@ private:
     FmSynthesiser m_synthesiser;
     
     juce::NormalisableRange<float> m_frequencyRange;
+    juce::NormalisableRange<float> m_envelopeRange;
     juce::Random m_random;
     juce::dsp::ProcessSpec m_spec;
     juce::ADSR m_noiseEnvelope;
@@ -82,16 +83,16 @@ private:
     float m_noiseEnvelopeS = 1.0f;
     float m_noiseEnvelopeR = 10.0f;
     
-    float m_operator01Frequency = 0.0f;
+    float m_operator01Frequency = 220.0f;
     
-    float m_operator02Frequency = 0.0f;
-    float m_operator02Depth = 0.0f;
+    float m_operator02Frequency = 440.0f;
+    float m_operator02Depth = 2000.0f;
     
-    float m_operator03Frequency = 0.0f;
-    float m_operator03Depth = 0.0f;
+    float m_operator03Frequency = 880.0f;
+    float m_operator03Depth = 2000.0f;
     
-    float m_operator04Frequency = 0.0f;
-    float m_operator04Depth = 0.0f;
+    float m_operator04Frequency = 1760.0f;
+    float m_operator04Depth = 2000.0f;
     
     juce::AudioProcessorValueTreeState m_valueTree;
 

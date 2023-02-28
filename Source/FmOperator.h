@@ -31,13 +31,13 @@ public:
     
     void setModDepth(float depth);
     
-    void updateEnvelopeParameters(float attack, float decay, float sustain, float release);
+    void updateAmpEnvParams(float attack, float decay, float sustain, float release);
     
-    juce::ADSR* getEnvelope();
+    juce::ADSR* getAmpEnvelope();
     
 private:
     
-    juce::ADSR m_envelope;
+    juce::ADSR m_ampEnvelope;
     
     double m_currentAngle = 0;
     double m_angleDelta = 0;
