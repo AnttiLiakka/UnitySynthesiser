@@ -39,7 +39,7 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     auto* operator04 = getOperator(3);
     
     operator01->setFrequency(m_parameters.getRawParameterValue("operator01Frequency")->load());
-    operator01->updateAmpEnvParams(
+    operator01->updateEnvelopeParameters(
                                          m_parameters.getRawParameterValue("op01A")->load(),
                                          m_parameters.getRawParameterValue("op01D")->load(),
                                          m_parameters.getRawParameterValue("op01S")->load(),
@@ -47,7 +47,7 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     
     operator02->setFrequency(m_parameters.getRawParameterValue("operator02Frequency")->load());
     operator02->setModDepth(m_parameters.getRawParameterValue("operator02Depth")->load());
-    operator02->updateAmpEnvParams(
+    operator02->updateEnvelopeParameters(
                                          m_parameters.getRawParameterValue("op02A")->load(),
                                          m_parameters.getRawParameterValue("op02D")->load(),
                                          m_parameters.getRawParameterValue("op02S")->load(),
@@ -55,7 +55,7 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     
     operator03->setFrequency(m_parameters.getRawParameterValue("operator03Frequency")->load());
     operator03->setModDepth(m_parameters.getRawParameterValue("operator03Depth")->load());
-    operator03->updateAmpEnvParams(
+    operator03->updateEnvelopeParameters(
                                          m_parameters.getRawParameterValue("op03A")->load(),
                                          m_parameters.getRawParameterValue("op03D")->load(),
                                          m_parameters.getRawParameterValue("op03S")->load(),
@@ -63,7 +63,7 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
     
     operator04->setFrequency(m_parameters.getRawParameterValue("operator04Frequency")->load());
     operator04->setModDepth(m_parameters.getRawParameterValue("operator04Depth")->load());
-    operator04->updateAmpEnvParams(
+    operator04->updateEnvelopeParameters(
                                          m_parameters.getRawParameterValue("op04A")->load(),
                                          m_parameters.getRawParameterValue("op04D")->load(),
                                          m_parameters.getRawParameterValue("op04S")->load(),
@@ -170,7 +170,7 @@ void FmSynthesiser::processNextBlock(juce::dsp::AudioBlock<float> block)
             break;
         //Epic fail
         default:
-            jassertfalse;
+            jassertfalse; //Change to return on release
             break;
     }
 }
@@ -179,7 +179,7 @@ void FmSynthesiser::noteOn()
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
-        m_operators[i].getAmpEnvelope()->noteOn();
+        m_operators[i].getEnvelope()->noteOn();
     }
 }
 
@@ -187,7 +187,7 @@ void FmSynthesiser::noteOff()
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
-        m_operators[i].getAmpEnvelope()->noteOff();
+        m_operators[i].getEnvelope()->noteOff();
     }
 }
 
