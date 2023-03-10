@@ -147,7 +147,7 @@ void FmSynthesiser::noteOn()
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
-        m_operators[i].getEnvelope()->noteOn();
+        m_operators[i].getAmpEnvelope()->noteOn();
     }
 }
 
@@ -155,7 +155,7 @@ void FmSynthesiser::noteOff()
 {
     for (int i = 0; i < m_numOperators; ++i)
     {
-        m_operators[i].getEnvelope()->noteOff();
+        m_operators[i].getAmpEnvelope()->noteOff();
     }
 }
 

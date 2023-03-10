@@ -59,13 +59,11 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
     
-    void updateEnvelopeParameters();
+    void updateNoiseEnvelopeParameters();
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
-    
-    FmSynthesiser m_synthesiser;
     
     juce::NormalisableRange<float> m_frequencyRange;
     juce::Random m_random;
@@ -74,26 +72,43 @@ private:
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
-    juce::AudioProcessorValueTreeState m_valueTree;
-    
     bool m_playing = false;
     bool m_playNoise = false;
     
-    float m_noiseEnvelopeA = 0.1f;
-    float m_noiseEnvelopeD = 0.1f;
+    float m_noiseEnvelopeA = 1.0f;
+    float m_noiseEnvelopeD = 1.0f;
     float m_noiseEnvelopeS = 1.0f;
-    float m_noiseEnvelopeR = 10.0f;
+    float m_noiseEnvelopeR = 1.0f;
     
-    float m_operator01Frequency = 0.0f;
+    float m_operator01Frequency = 220.0f;
+    float m_operator01AmpAttack = 1.0;
+    float m_operator01AmpDecay = 1.0;
+    float m_operator01AmpSustain = 1.0;
+    float m_operator01AmpRelease = 1.0;
     
-    float m_operator02Frequency = 0.0f;
-    float m_operator02Depth = 0.0f;
+    float m_operator02Frequency = 440.0f;
+    float m_operator02Depth = 1000.0f;
+    float m_operator02AmpAttack = 1.0;
+    float m_operator02AmpDecay = 1.0;
+    float m_operator02AmpSustain = 1.0;
+    float m_operator02AmpRelease = 1.0;
     
-    float m_operator03Frequency = 0.0f;
-    float m_operator03Depth = 0.0f;
+    float m_operator03Frequency = 880.0f;
+    float m_operator03Depth = 1000.0f;
+    float m_operator03AmpAttack = 1.0;
+    float m_operator03AmpDecay = 1.0;
+    float m_operator03AmpSustain = 1.0;
+    float m_operator03AmpRelease = 1.0;
     
-    float m_operator04Frequency = 0.0f;
-    float m_operator04Depth = 0.0f;
+    float m_operator04Frequency = 1760.0f;
+    float m_operator04Depth = 1000.0f;
+    float m_operator04AmpAttack = 1.0;
+    float m_operator04AmpDecay = 1.0;
+    float m_operator04AmpSustain = 1.0;
+    float m_operator04AmpRelease = 1.0;
 
+    juce::AudioProcessorValueTreeState m_valueTree;
+    FmSynthesiser m_synthesiser;
+    
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };

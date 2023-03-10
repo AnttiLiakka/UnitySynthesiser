@@ -25,35 +25,35 @@ public:
     
     float getNextSample();
     
-    void setFrequency(float& frequency);
+    void setFrequency(float frequency);
     
-    void setModSample(float& sample);
+    void setModSample(float sample);
     
-    void setModDepth(float& depth);
+    void setModDepth(float depth);
     
-    void setAttack(float& attack);
+    void setAmpAttack(float attack);
     
-    void setDecay(float& decay);
+    void setAmpDecay(float decay);
     
-    void setSustain(float& sustain);
+    void setAmpSustain(float sustain);
     
-    void setRelease(float& release);
+    void setAmpRelease(float release);
     
-    float getAttack();
+    float getAmpAttack();
     
-    float getDecay();
+    float getAmpDecay();
     
-    float getSustain();
+    float getAmpSustain();
     
-    float getRelease();
+    float getAmpRelease();
     
-    void updateEnvelopeParameters();
+    void updateAmpEnvelopeParameters();
     
-    juce::ADSR* getEnvelope();
+    juce::ADSR* getAmpEnvelope();
     
 private:
     
-    juce::ADSR m_envelope;
+    juce::ADSR m_ampEnvelope;
     
     double m_currentAngle = 0;
     double m_angleDelta = 0;
@@ -64,9 +64,11 @@ private:
     float m_modulationSample = 0;
     float m_modulationDepth = 1;
     
-    float m_attack = 1;
-    float m_decay = 1;
-    float m_sustain = 0.0001f;
-    float m_release = 1;
+    float m_ampAttack = 0;
+    float m_ampDecay = 0;
+    float m_ampSustain = 0;
+    float m_ampRelease = 0;
+    
+    juce::Atomic<float> m_test = 0;
     
 };
