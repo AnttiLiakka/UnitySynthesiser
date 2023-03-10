@@ -17,7 +17,7 @@ class FmSynthesiser
 {
 public:
     
-    FmSynthesiser(juce::AudioProcessorValueTreeState& parameters, const int numOperators);
+    FmSynthesiser(const int numOperators);
     
     void prepareToPlay(double sampleRate);
     
@@ -34,7 +34,6 @@ public:
 private:
     
     std::vector<FmOperator> m_operators;
-    juce::AudioProcessorValueTreeState& m_parameters;
     
     const int m_numOperators;
     int m_algorithm = 1;

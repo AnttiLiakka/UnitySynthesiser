@@ -74,6 +74,8 @@ private:
     juce::dsp::LadderFilter<float> m_filter;
     juce::dsp::Gain<float> m_gain;
     
+    juce::AudioProcessorValueTreeState m_valueTree;
+    
     bool m_playing = false;
     bool m_playNoise = false;
     
@@ -92,8 +94,6 @@ private:
     
     float m_operator04Frequency = 0.0f;
     float m_operator04Depth = 0.0f;
-    
-    juce::AudioProcessorValueTreeState m_valueTree;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (UnitySynthesiserAudioProcessor)
 };
