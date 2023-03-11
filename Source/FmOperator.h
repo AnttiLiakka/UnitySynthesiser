@@ -51,9 +51,27 @@ public:
     
     juce::ADSR* getAmpEnvelope();
     
-private:
+    void setFreqAttack(float attack);
     
-    juce::ADSR m_ampEnvelope;
+    void setFreqDecay(float decay);
+    
+    void setFreqSustain(float sustain);
+    
+    void setFreqRelease(float release);
+    
+    float getFreqAttack();
+    
+    float getFreqDecay();
+    
+    float getFreqSustain();
+    
+    float getFreqRelease();
+    
+    void updateFreqEnvelopeParameters();
+    
+    juce::ADSR* getFreqEnvelope();
+    
+private:
     
     double m_currentAngle = 0;
     double m_angleDelta = 0;
@@ -69,6 +87,12 @@ private:
     float m_ampSustain = 0;
     float m_ampRelease = 0;
     
-    juce::Atomic<float> m_test = 0;
+    float m_freqAttack = 0;
+    float m_freqDecay = 0;
+    float m_freqSustain = 0;
+    float m_freqRelease = 0;
+    
+    juce::ADSR m_ampEnvelope;
+    juce::ADSR m_freqEnvelope;
     
 };

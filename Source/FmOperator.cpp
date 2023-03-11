@@ -30,6 +30,9 @@ void FmOperator::prepareToPlay(double sampleRate)
     
     m_ampEnvelope.setSampleRate(sampleRate);
     updateAmpEnvelopeParameters();
+    
+    m_freqEnvelope.setSampleRate(sampleRate);
+    updateFreqEnvelopeParameters();
 }
 
 float FmOperator::getNextSample()
@@ -37,7 +40,7 @@ float FmOperator::getNextSample()
     auto currentSample = (float) std::sin(m_currentAngle) * (m_modulationDepth * m_ampEnvelope.getNextSample());
     m_currentAngle += m_angleDelta;
     
-    m_frequency = m_baseFrequency + (m_modulationSample);
+    m_frequency = m_baseFrequency + (m_modulationSample * m_freqEnvelope.getNextSample());
     updateAngleDelta();
     
     return currentSample;
@@ -112,4 +115,58 @@ void FmOperator::updateAmpEnvelopeParameters()
 juce::ADSR* FmOperator::getAmpEnvelope()
 {
     return &m_ampEnvelope;
+}
+
+void FmOperator::setFreqAttack(float attack)
+{
+    m_freqAttack = attack;
+    updateAmpEnvelopeParameters();
+}
+
+void FmOperator::setFreqDecay(float decay)
+{
+    m_freqDecay = decay;
+    updateAmpEnvelopeParameters();
+}
+
+void FmOperator::setFreqSustain(float sustain)
+{
+    m_freqSustain = sustain;
+    updateAmpEnvelopeParameters();
+}
+
+void FmOperator::setFreqRelease(float release)
+{
+    m_freqRelease = release;
+    updateAmpEnvelopeParameters();
+}
+
+float FmOperator::getFreqAttack()
+{
+    return m_freqAttack;
+}
+
+float FmOperator::getFreqDecay()
+{
+    return m_freqDecay;
+}
+
+float FmOperator::getFreqSustain()
+{
+    return m_freqSustain;
+}
+
+float FmOperator::getFreqRelease()
+{
+    return m_freqRelease;
+}
+
+void FmOperator::updateFreqEnvelopeParameters()
+{
+    m_freqEnvelope.setParameters(juce::ADSR::Parameters(m_freqAttack, m_freqDecay, m_freqSustain, m_freqRelease));
+}
+
+juce::ADSR* FmOperator::getFreqEnvelope()
+{
+    return &m_freqEnvelope;
 }
