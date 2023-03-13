@@ -76,9 +76,8 @@ private:
     double m_currentAngle = 0;
     double m_angleDelta = 0;
     double m_sampleRate = 0;
-    
-    float m_frequency;
-    float m_baseFrequency;
+    double m_frequency;
+    juce::Atomic<double> m_baseFrequency;
     float m_modulationSample = 0;
     float m_modulationDepth = 1;
     

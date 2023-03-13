@@ -10,7 +10,8 @@
 
 #include <JuceHeader.h>
 #include "FmSynthesiser.h"
-
+#include <chrono>
+#include <thread>
 //==============================================================================
 /**
 */
@@ -61,13 +62,14 @@ public:
     
     void updateNoiseEnvelopeParameters();
     
-    void changePreset(int preset);
+    void changePreset(float preset);
     
     void parameterChanged(const juce::String& parameterID, float newValue) override;
 
 private:
     
     juce::NormalisableRange<float> m_frequencyRange;
+    juce::NormalisableRange<float> m_envelopeRange;
     juce::Random m_random;
     juce::dsp::ProcessSpec m_spec;
     juce::ADSR m_noiseEnvelope;
@@ -89,43 +91,43 @@ private:
     float m_operator01AmpDecay = 1.0;
     float m_operator01AmpSustain = 1.0;
     float m_operator01AmpRelease = 1.0;
-    float m_operator01FreqAttack = 1.0;
+    float m_operator01FreqAttack = 10.0;
     float m_operator01FreqDecay = 1.0;
     float m_operator01FreqSustain = 1.0;
-    float m_operator01FreqRelease = 1.0;
+    float m_operator01FreqRelease = 10.0;
     
     float m_operator02Frequency = 440.0f;
     float m_operator02Depth = 1000.0f;
-    float m_operator02AmpAttack = 1.0;
-    float m_operator02AmpDecay = 1.0;
+    float m_operator02AmpAttack = 10.0;
+    float m_operator02AmpDecay = 10.0;
     float m_operator02AmpSustain = 1.0;
-    float m_operator02AmpRelease = 1.0;
-    float m_operator02FreqAttack = 1.0;
-    float m_operator02FreqDecay = 1.0;
+    float m_operator02AmpRelease = 10.0;
+    float m_operator02FreqAttack = 10.0;
+    float m_operator02FreqDecay = 10.0;
     float m_operator02FreqSustain = 1.0;
-    float m_operator02FreqRelease = 1.0;
+    float m_operator02FreqRelease = 10.0;
     
     float m_operator03Frequency = 880.0f;
     float m_operator03Depth = 1000.0f;
-    float m_operator03AmpAttack = 1.0;
-    float m_operator03AmpDecay = 1.0;
+    float m_operator03AmpAttack = 10.0;
+    float m_operator03AmpDecay = 10.0;
     float m_operator03AmpSustain = 1.0;
-    float m_operator03AmpRelease = 1.0;
-    float m_operator03FreqAttack = 1.0;
-    float m_operator03FreqDecay = 1.0;
+    float m_operator03AmpRelease = 10.0;
+    float m_operator03FreqAttack = 10.0;
+    float m_operator03FreqDecay = 10.0;
     float m_operator03FreqSustain = 1.0;
-    float m_operator03FreqRelease = 1.0;
+    float m_operator03FreqRelease = 10.0;
     
     float m_operator04Frequency = 1760.0f;
     float m_operator04Depth = 1000.0f;
-    float m_operator04AmpAttack = 1.0;
-    float m_operator04AmpDecay = 1.0;
+    float m_operator04AmpAttack = 10.0;
+    float m_operator04AmpDecay = 10.0;
     float m_operator04AmpSustain = 1.0;
-    float m_operator04AmpRelease = 1.0;
-    float m_operator04FreqAttack = 1.0;
-    float m_operator04FreqDecay = 1.0;
+    float m_operator04AmpRelease = 10.0;
+    float m_operator04FreqAttack = 10.0;
+    float m_operator04FreqDecay = 10.0;
     float m_operator04FreqSustain = 1.0;
-    float m_operator04FreqRelease = 1.0;
+    float m_operator04FreqRelease = 10.0;
     
     static juce::String m_presetID;
     static juce::String m_playingID;

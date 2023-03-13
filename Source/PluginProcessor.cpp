@@ -68,10 +68,11 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
      :  AudioProcessor (BusesProperties()
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                        ),
-        m_frequencyRange(juce::NormalisableRange<float>(0, 14080, 220)),
+        m_frequencyRange(0, 20000, 1),
+        m_envelopeRange(0, 10, 1),
         m_valueTree(*this, nullptr, "Parameters",
                     {
-                     std::make_unique<juce::AudioParameterInt>(m_presetID, "Preset", 0, 1, 0),
+                     std::make_unique<juce::AudioParameterInt>(m_presetID, "Preset", 0, 3, 0),
                      std::make_unique<juce::AudioParameterBool>(m_playingID, "Playing", 0),
                      std::make_unique<juce::AudioParameterChoice>(m_modeID, "Mode", juce::StringArray{"FM", "Noise"}, 0),
                      std::make_unique<juce::AudioParameterFloat>(m_nAttackID, "Noise Attack", 0.1f, 10.0f, m_noiseEnvelopeA),
@@ -79,51 +80,52 @@ UnitySynthesiserAudioProcessor::UnitySynthesiserAudioProcessor()
                      std::make_unique<juce::AudioParameterFloat>(m_nSustainID, "Noise Sustain", 0.1f, 1.0f, m_noiseEnvelopeS),
                      std::make_unique<juce::AudioParameterFloat>(m_nReleaseID, "Noise Release", 0.1f, 10.0f, m_noiseEnvelopeR),
                      std::make_unique<juce::AudioParameterInt>(m_algorithmID, "FM Algorithm", 1, 4, 1),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqID, "Operator01 Frequency", m_frequencyRange, m_operator01Frequency),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpAttID, "Operator01 Amp Attack", 0.001f, 10.0f, m_operator01AmpAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpDecID, "Operator01 Amp Decay", 0.001f, 10.0f, m_operator01AmpDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpSusID, "Operator01 Amp Sustain", 0.001f, 1.0f, m_operator01AmpSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpRelID, "Operator01 Amp Release", 0.001f, 10.0f, m_operator01AmpRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqAttID, "Operator01 Freq Attack", 0.001f, 10.0f, m_operator01FreqAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqDecID, "Operator01 Freq Decay", 0.001f, 10.0f, m_operator01FreqDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqSusID, "Operator01 Freq Sustain", 0.001f, 1.0f, m_operator01FreqSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqRelID, "Operator01 Freq Release", 0.001f, 10.0f, m_operator01FreqRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqID, "Operator02 Frequency", m_frequencyRange, m_operator02Frequency),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02DepthID, "Operator02 Depth", 0.0f, 20000.0f, m_operator02Depth),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpAttID, "Operator02 Amp Attack", 0.001f, 10.0f, m_operator02AmpAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpDecID, "Operator02 Amp Decay", 0.001f, 10.0f, m_operator02AmpDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpSusID, "Operator02 Amp Sustain", 0.001f, 1.0f, m_operator02AmpSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpRelID, "Operator02 Amp Release", 0.001f, 10.0f, m_operator02AmpRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqAttID, "Operator02 Freq Attack", 0.001f, 10.0f, m_operator02FreqAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqDecID, "Operator02 Freq Decay", 0.001f, 10.0f, m_operator02FreqDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqSusID, "Operator02 Freq Sustain", 0.001f, 1.0f, m_operator02FreqSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqRelID, "Operator02 Freq Release", 0.001f, 10.0f, m_operator02FreqRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqID, "Operator03 Frequency", m_frequencyRange, m_operator03Frequency),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03DepthID, "Operator03 Depth", 0.0f, 20000.0f, m_operator03Depth),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpAttID, "Operator03 Amp Attack", 0.01f, 10.0f, m_operator03AmpAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpDecID, "Operator03 Amp Decay", 0.01f, 10.0f, m_operator03AmpDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpSusID, "Operator03 Amp Sustain", 0.01f, 1.0f, m_operator03AmpSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpRelID, "Operator03 Amp Release", 0.01f, 10.0f, m_operator03AmpRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqAttID, "Operator03 Freq Attack", 0.001f, 10.0f, m_operator03FreqAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqDecID, "Operator03 Freq Decay", 0.001f, 10.0f, m_operator03FreqDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqSusID, "Operator03 Freq Sustain", 0.001f, 1.0f, m_operator03FreqSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqRelID, "Operator03 Freq Release", 0.001f, 10.0f, m_operator03FreqRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqID, "Operator04 Frequency", m_frequencyRange, m_operator04Frequency),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04DepthID, "Operator04 Depth", 0.0f, 20000.0f, m_operator04Depth),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpAttID, "Operator04 Amp Attack", 0.01f, 10.0f, m_operator04AmpAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpDecID, "Operator04 Amp Decay", 0.01f, 10.0f, m_operator04AmpDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpSusID, "Operator04 Amp Sustain", 0.01f, 1.0f, m_operator04AmpSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpRelID, "Operator04 Amp Release", 0.01f, 10.0f, m_operator04AmpRelease),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqAttID, "Operator04 Freq Attack", 0.001f, 10.0f, m_operator04FreqAttack),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqDecID, "Operator04 Freq Decay", 0.001f, 10.0f, m_operator04FreqDecay),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqSusID, "Operator04 Freq Sustain", 0.001f, 1.0f, m_operator04FreqSustain),
-                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqRelID, "Operator04 Freq Release", 0.001f, 10.0f, m_operator04FreqRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqID, "OP01 Freq", m_frequencyRange, m_operator01Frequency),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpAttID, "OP01 Amp A", 0.001f, 10.0f, m_operator01AmpAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpDecID, "OP01 Amp D", 0.001f, 10.0f, m_operator01AmpDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpSusID, "OP01 Amp S", 0.001f, 1.0f, m_operator01AmpSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01AmpRelID, "OP01 Amp R", 0.001f, 10.0f, m_operator01AmpRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqAttID, "OP01 Freq A", 0.001f, 10.0f, m_operator01FreqAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqDecID, "OP01 Freq D", 0.001f, 10.0f, m_operator01FreqDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqSusID, "OP01 Freq S", 0.001f, 1.0f, m_operator01FreqSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op01FreqRelID, "OP01 Freq R", 0.001f, 10.0f, m_operator01FreqRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqID, "OP02 Freq", m_frequencyRange, m_operator02Frequency),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02DepthID, "OP02 Depth", 0.0f, 20000.0f, m_operator02Depth),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpAttID, "OP02 Amp A", m_envelopeRange, m_operator02AmpAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpDecID, "OP02 Amp D", m_envelopeRange, m_operator02AmpDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpSusID, "OP02 Amp S", 0.001f, 1.0f, m_operator02AmpSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02AmpRelID, "OP02 Amp R", m_envelopeRange, m_operator02AmpRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqAttID, "OP02 Freq A", m_envelopeRange, m_operator02FreqAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqDecID, "OP02 Freq D", m_envelopeRange, m_operator02FreqDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqSusID, "OP02 Freq S", 0.001f, 1.0f, m_operator02FreqSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op02FreqRelID, "OP02 Freq R", m_envelopeRange, m_operator02FreqRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqID, "OP03 Freq", m_frequencyRange, m_operator03Frequency),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03DepthID, "OP03 Depth", 0.0f, 20000.0f, m_operator03Depth),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpAttID, "OP03 Amp A",m_envelopeRange, m_operator03AmpAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpDecID, "OP03 Amp D", m_envelopeRange, m_operator03AmpDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpSusID, "OP03 Amp S", 0.001f, 1.0f, m_operator03AmpSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03AmpRelID, "OP03 Amp R", m_envelopeRange, m_operator03AmpRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqAttID, "OP03 Freq A", m_envelopeRange, m_operator03FreqAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqDecID, "OP03 Freq D", m_envelopeRange, m_operator03FreqDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqSusID, "OP03 Freq S", 0.001f, 1.0f, m_operator03FreqSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op03FreqRelID, "OP03 Freq R", m_envelopeRange, m_operator03FreqRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqID, "OP04 Freq", m_frequencyRange, m_operator04Frequency),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04DepthID, "OP04 Depth", 0.0f, 20000.0f, m_operator04Depth),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpAttID, "OP04 Amp A", m_envelopeRange, m_operator04AmpAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpDecID, "OP04 Amp D", m_envelopeRange, m_operator04AmpDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpSusID, "OP04 Amp S", 0.001f, 1.0f, m_operator04AmpSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04AmpRelID, "OP04 Amp R", m_envelopeRange, m_operator04AmpRelease),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqAttID, "OP04 Freq A", m_envelopeRange, m_operator04FreqAttack),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqDecID, "OP04 Freq D", m_envelopeRange, m_operator04FreqDecay),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqSusID, "OP04 Freq S", 0.001f, 1.0f, m_operator04FreqSustain),
+                     std::make_unique<juce::AudioParameterFloat>(m_op04FreqRelID, "OP04 Freq R", m_envelopeRange, m_operator04FreqRelease),
                      std::make_unique<juce::AudioParameterFloat>(m_gainID, "Gain", 0.0f, 1.0f, 0.5f),
                      std::make_unique<juce::AudioParameterBool>(m_filterBypassID, "Filter Bypass", 1),
                      std::make_unique<juce::AudioParameterFloat>(m_filterCutoffID, "Cutoff", 50.0f, 20000.0f, 20000.0f)
         }),
         m_synthesiser(4)
 {
+    m_valueTree.addParameterListener(m_presetID, this);
     m_valueTree.addParameterListener(m_playingID, this);
     m_valueTree.addParameterListener(m_nAttackID, this);
     m_valueTree.addParameterListener(m_nDecayID, this);
@@ -423,24 +425,64 @@ void UnitySynthesiserAudioProcessor::updateNoiseEnvelopeParameters()
     m_noiseEnvelope.setParameters(juce::ADSR::Parameters(m_noiseEnvelopeA, m_noiseEnvelopeD, m_noiseEnvelopeS, m_noiseEnvelopeR));
 }
 
-void UnitySynthesiserAudioProcessor::changePreset(int preset)
+void UnitySynthesiserAudioProcessor::changePreset(float preset)
 {
-    switch (preset) {
-        case 1:
-            //Preset 01
-            break;
-            
-        case 2:
-            //Preset 02
-            
-        default:
-            break;
+    if (preset == 0)
+    {
+        //Preset 01 A scale
+        
+        m_valueTree.getParameterAsValue(m_op01FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(57);
+        m_valueTree.getParameterAsValue(m_op02FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(69);
+        m_valueTree.getParameterAsValue(m_op03FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(81);
+        m_valueTree.getParameterAsValue(m_op04FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(93);
+        
+        DBG("Preset01: "+juce::String(m_valueTree.getRawParameterValue(m_op01FreqID)->load()));
+        
     }
+    else if (preset == 1)
+    {
+        //Preset 02 C scale
+        
+        m_valueTree.getParameterAsValue(m_op01FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(48);
+        m_valueTree.getParameterAsValue(m_op02FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(60);
+        m_valueTree.getParameterAsValue(m_op03FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(72);
+        m_valueTree.getParameterAsValue(m_op04FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(84);
+        
+        DBG("Preset02: "+juce::String(m_valueTree.getRawParameterValue(m_op01FreqID)->load()));
+    }
+    else if (preset == 2)
+    {
+        //Preset 03 D scale
+        
+        m_valueTree.getParameterAsValue(m_op01FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(50);
+        m_valueTree.getParameterAsValue(m_op02FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(62);
+        m_valueTree.getParameterAsValue(m_op03FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(74);
+        m_valueTree.getParameterAsValue(m_op04FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(86);
+        
+        DBG("Preset03: "+juce::String(m_valueTree.getRawParameterValue(m_op01FreqID)->load()));
+
+    }
+    else if (preset == 3)
+    {
+        //Preset 04 E scale
+        
+        m_valueTree.getParameterAsValue(m_op01FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(52);
+        m_valueTree.getParameterAsValue(m_op02FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(64);
+        m_valueTree.getParameterAsValue(m_op03FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(76);
+        m_valueTree.getParameterAsValue(m_op04FreqID) = (float) juce::MidiMessage::getMidiNoteInHertz(88);
+        
+    }
+
 }
 
 void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
 {
-    if (parameterID == m_playingID)
+    if (parameterID == m_presetID)
+    {
+        changePreset(newValue);
+    }
+    
+    else if (parameterID == m_playingID)
     {
         if(newValue == 1)
         {
@@ -683,6 +725,12 @@ void UnitySynthesiserAudioProcessor::parameterChanged(const juce::String& parame
     {
         m_filter.setCutoffFrequencyHz(newValue);
     }
-    else jassertfalse; // You probably have a typo somewhere
+
+    else
+    {
+        // You probably have a typo somewhere
+        DBG(parameterID);
+        jassertfalse;
+    }
 }
 

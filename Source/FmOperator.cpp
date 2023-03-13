@@ -40,7 +40,7 @@ float FmOperator::getNextSample()
     auto currentSample = (float) std::sin(m_currentAngle) * (m_modulationDepth * m_ampEnvelope.getNextSample());
     m_currentAngle += m_angleDelta;
     
-    m_frequency = m_baseFrequency + (m_modulationSample * m_freqEnvelope.getNextSample());
+    m_frequency = m_baseFrequency.get() + (m_modulationSample * m_freqEnvelope.getNextSample());
     updateAngleDelta();
     
     return currentSample;
@@ -48,7 +48,8 @@ float FmOperator::getNextSample()
 
 void FmOperator::setFrequency(float frequency)
 {
-    m_baseFrequency = frequency;
+    auto newFreq = (double) frequency;
+    m_baseFrequency.set(newFreq);
 }
 
 void FmOperator::setModSample(float sample)
