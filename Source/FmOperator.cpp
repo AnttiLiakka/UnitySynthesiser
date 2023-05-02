@@ -19,13 +19,22 @@ FmOperator::FmOperator(float baseFrequency) :
 
 void FmOperator::updateAngleDelta()
 {
+//    In this function the number of cycles needed to complete for each output sample is calculated by
+//    multiplying the frequency with the sample rate
+    
+//    This value is then further multiplied by the lenght of the the whole
+//    oscillator cycle, which is 2*pi
     auto cyclesPerSample = m_frequency / m_sampleRate;
     m_angleDelta = cyclesPerSample * 2.0 * juce::MathConstants<double>::pi;
 }
 
 void FmOperator::prepareToPlay(double sampleRate)
 {
+//    This function sets the sample rate member and updates the
+//    sample rates for the envelopes so that they calculate their
+//    values correctly
     m_sampleRate = sampleRate;
+//    angleDelta needs to be updated since the sample rate has changed
     updateAngleDelta();
     
     m_ampEnvelope.setSampleRate(sampleRate);
@@ -37,14 +46,25 @@ void FmOperator::prepareToPlay(double sampleRate)
 
 float FmOperator::getNextSample()
 {
-    auto currentSample = (float) std::sin(m_currentAngle) * (m_modulationDepth * m_ampEnvelope.getNextSample());
+//    This is the most important function in this class as it returns
+//    The next sample for this operator
+    auto currentSample = (float) std::sin(m_currentAngle) * (m_modulationDepth.get() * m_ampEnvelope.getNextSample());
+//    Important to note here that the currentAngle and m_frequency are
+//    updated AFTER the currentSample is initialised
     m_currentAngle += m_angleDelta;
-    
     m_frequency = m_baseFrequency.get() + (m_modulationSample * m_freqEnvelope.getNextSample());
     updateAngleDelta();
     
     return currentSample;
 }
+
+/*
+    Setters and getters are required as other classes do not have access
+    to the private members of this class
+ 
+    This also makes it slightly more convenient as it is not necessary
+    to remember which value is Atomic and which is not
+ */
 
 void FmOperator::setFrequency(float frequency)
 {
@@ -60,7 +80,7 @@ void FmOperator::setModSample(float sample)
 
 void FmOperator::setModDepth(float depth)
 {
-    m_modulationDepth = depth;
+    m_modulationDepth.set(depth);
     updateAmpEnvelopeParameters();
 }
 
